@@ -45,6 +45,7 @@ export const PUT = auth(async (request, context) => {
       intro: formData.get('intro'),
       description: formData.get('description'),
       conclusion: formData.get('conclusion'),
+      tags: formData.getAll('tags[]'), // Get all tags
     };
 
     // Check if image is included
@@ -52,7 +53,7 @@ export const PUT = auth(async (request, context) => {
     
     // Validate required fields
     for (const [key, value] of Object.entries(updateData)) {
-      if (!value) {
+      if (!value && key !== 'tags') { // Skip validation for tags
         return NextResponse.json(
           { error: `${key} is required` },
           { status: 400 }

@@ -5,6 +5,8 @@ import PostList from '../components/blog/PostList';
 import Link from 'next/link';
 
 export default function Blog() {
+  const [selectedTag, setSelectedTag] = useState(null);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-12">
@@ -26,7 +28,7 @@ export default function Blog() {
         </div>
       </div>
 
-      <PostList />
+      <PostList selectedTag={selectedTag} onTagSelect={setSelectedTag} />
     </div>
   );
 } 

@@ -27,10 +27,26 @@ const postSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  tags: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tag',
+  }],
+}, { 
+  timestamps: true,
+  strictPopulate: false // Add this option
 });
 
-export default mongoose.models.Post || mongoose.model('Post', postSchema); 
+// Add a pre-save middleware to ensure tags are unique
+postSchema.pre('save', function(next) {
+  if (this.tags) {
+    // Remove duplicates
+    this.tags = [...new Set(this.tags)];
+  }
+  next();
+});
+
+// Make sure Tag model is imported and registered before Post model
+require('./Tag');
+
+const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
+export default Post; 

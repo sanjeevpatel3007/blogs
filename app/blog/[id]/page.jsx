@@ -90,21 +90,28 @@ export default function BlogPost({ params }) {
         </div>
 
         <div className="p-8">
-          <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
-            <span>By {post.author?.name || 'Unknown'}</span>
-            <span>•</span>
-            <time dateTime={post.createdAt}>
-              {new Date(post.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </time>
-          </div>
-
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
             {post.title}
           </h1>
+
+          {post.tags && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {post.tags.map(tag => (
+                <span
+                  key={tag._id}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                >
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+            <span>By {post.author?.name || 'Unknown'}</span>
+            <span>•</span>
+            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+          </div>
 
           <div className="prose max-w-none">
             <div className="mb-8">

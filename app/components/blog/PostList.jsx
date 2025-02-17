@@ -4,8 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-export default function PostList() {
+export default function PostList({ selectedTag, onTagSelect }) {
   const [posts, setPosts] = useState([]);
+  const [allTags, setAllTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,6 +31,15 @@ export default function PostList() {
 
       const data = await res.json();
       setPosts(Array.isArray(data) ? data : []);
+      
+      // Extract unique tags from posts
+      const tags = new Set();
+      data.forEach(post => {
+        post.tags?.forEach(tag => {
+          tags.add(JSON.stringify(tag));
+        });
+      });
+      setAllTags(Array.from(tags).map(t => JSON.parse(t)));
     } catch (error) {
       console.error('Error fetching posts:', error);
       setError(error.message);
@@ -38,6 +48,10 @@ export default function PostList() {
       setLoading(false);
     }
   };
+
+  const filteredPosts = selectedTag
+    ? posts.filter(post => post.tags?.some(tag => tag._id === selectedTag._id))
+    : posts;
 
   if (loading) {
     return (
@@ -62,58 +76,98 @@ export default function PostList() {
     );
   }
 
-  if (!posts || posts.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-xl text-gray-600">No posts found</h3>
-        <p className="text-gray-500 mt-2">Be the first to create a post!</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {posts.map((post) => (
-        <article 
-          key={post._id} 
-          className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-        >
-          <Link href={`/blog/${post._id}`} className="block">
-            <div className="relative h-48">
-              <Image
-                src={post.imageUrl}
-                alt={post.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority
-              />
-            </div>
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                {post.title}
-              </h2>
-              <p className="text-gray-600 mb-4 line-clamp-3">
-                {post.intro}
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">
-                    By {post.author?.name || 'Unknown'}
-                  </span>
-                  <span className="text-gray-300">•</span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </span>
+    <div>
+      {/* Tags filter */}
+      {allTags.length > 0 && (
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-2">
+            {allTags.map(tag => (
+              <button
+                key={tag._id}
+                onClick={() => onTagSelect(selectedTag?._id === tag._id ? null : tag)}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors
+                  ${selectedTag?._id === tag._id
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                  }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Posts grid */}
+      {filteredPosts.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-xl text-gray-600">No posts found</h3>
+          <p className="text-gray-500 mt-2">
+            {selectedTag ? `No posts found with tag "${selectedTag.name}"` : 'Be the first to create a post!'}
+          </p>
+          {selectedTag && (
+            <button
+              onClick={() => onTagSelect(null)}
+              className="mt-4 text-indigo-600 hover:text-indigo-500"
+            >
+              Clear filter
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredPosts.map((post) => (
+            <article key={`${post._id}-${post.updatedAt}`} className="bg-white rounded-xl shadow-md overflow-hidden">
+              <Link href={`/blog/${post._id}`}>
+                <div className="relative h-48">
+                  <Image
+                    src={post.imageUrl}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
                 </div>
-                <span className="text-indigo-600 hover:text-indigo-500 font-medium text-sm">
-                  Read more →
-                </span>
-              </div>
-            </div>
-          </Link>
-        </article>
-      ))}
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {post.title}
+                  </h2>
+                  <p className="text-gray-600 mb-4 line-clamp-3">
+                    {post.intro}
+                  </p>
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.map(tag => (
+                        <span
+                          key={tag._id}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">
+                        By {post.author?.name || 'Unknown'}
+                      </span>
+                      <span className="text-gray-300">•</span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <span className="text-indigo-600 hover:text-indigo-500 font-medium text-sm">
+                      Read more →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 

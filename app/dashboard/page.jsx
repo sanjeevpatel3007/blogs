@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedTag, setSelectedTag] = useState(null);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -75,6 +76,14 @@ export default function Dashboard() {
     }
   };
 
+  // Filter posts by tag
+  const filteredPosts = selectedTag
+    ? userPosts.filter(post => post.tags?.some(tag => tag._id === selectedTag._id))
+    : userPosts;
+
+  // Get unique tags from user's posts
+  const allTags = [...new Set(userPosts.flatMap(post => post.tags || []))];
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -100,14 +109,49 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {userPosts.length === 0 ? (
+      {/* Tags filter */}
+      {allTags.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Filter by Tag</h2>
+          <div className="flex flex-wrap gap-2">
+            {allTags.map(tag => (
+              <button
+                key={tag._id}
+                onClick={() => setSelectedTag(selectedTag?._id === tag._id ? null : tag)}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors
+                  ${selectedTag?._id === tag._id
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+                  }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filteredPosts.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
-          <h3 className="text-xl text-gray-600">No posts yet</h3>
-          <p className="text-gray-500 mt-2">Create your first blog post!</p>
+          <h3 className="text-xl text-gray-600">No posts found</h3>
+          <p className="text-gray-500 mt-2">
+            {selectedTag 
+              ? `No posts found with tag "${selectedTag.name}"`
+              : 'Create your first blog post!'
+            }
+          </p>
+          {selectedTag && (
+            <button
+              onClick={() => setSelectedTag(null)}
+              className="mt-4 text-indigo-600 hover:text-indigo-500"
+            >
+              Clear filter
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {userPosts.map((post) => (
+          {filteredPosts.map((post) => (
             <article key={post._id} className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="relative h-48">
                 <Image
@@ -125,6 +169,18 @@ export default function Dashboard() {
                 <p className="text-gray-600 mb-4 line-clamp-3">
                   {post.intro}
                 </p>
+                {post.tags && post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {post.tags.map(tag => (
+                      <span
+                        key={tag._id}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-4">
                   <div className="text-sm text-gray-500">
                     {new Date(post.createdAt).toLocaleDateString()}
@@ -138,7 +194,8 @@ export default function Dashboard() {
                     </Link>
                     <button
                       onClick={() => handleDelete(post._id)}
-                      className="text-red-600 hover:text-red-500 font-medium text-sm"
+                      disabled={deleteLoading}
+                      className="text-red-600 hover:text-red-500 font-medium text-sm disabled:opacity-50"
                     >
                       Delete
                     </button>

@@ -27,6 +27,7 @@ export const POST = auth(async (req) => {
     const description = formData.get('description');
     const conclusion = formData.get('conclusion');
     const image = formData.get('image');
+    const tags = formData.getAll('tags[]'); // Get all tags
 
     if (!title || !intro || !description || !conclusion || !image) {
       return NextResponse.json(
@@ -36,8 +37,16 @@ export const POST = auth(async (req) => {
     }
 
     const imageUrl = await uploadImage(image);
+    
     const post = await postService.createPost(
-      { title, intro, description, conclusion, imageUrl },
+      { 
+        title, 
+        intro, 
+        description, 
+        conclusion, 
+        imageUrl,
+        tags, // Add tags to the post data
+      },
       req.userId
     );
 

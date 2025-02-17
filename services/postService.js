@@ -1,40 +1,57 @@
 import { connectDB } from '@/lib/db';
 import Post from '@/models/Post';
-import User from '@/models/User'; // Important: Import User model for populate to work
+import Tag from '@/models/Tag';
 import { uploadImage } from '@/lib/cloudinary';
 
 export const postService = {
   // Create a new post
   async createPost(postData, userId) {
     await connectDB();
-    return await Post.create({
-      ...postData,
-      author: userId,
-    });
+    try {
+      const { tags, ...otherData } = postData;
+      
+      // Create the post with tags
+      const post = await Post.create({
+        ...otherData,
+        author: userId,
+        tags: tags || [], // Ensure tags is an array
+      });
+
+      // Populate author and tags
+      return await Post.findById(post._id)
+        .populate('author', 'name')
+        .populate('tags', 'name');
+    } catch (error) {
+      console.error('Create post error:', error);
+      throw new Error(error.message || 'Failed to create post');
+    }
   },
 
-  // Get all posts
+  // Get all posts with populated tags
   async getAllPosts() {
     await connectDB();
     return await Post.find()
       .populate('author', 'name')
+      .populate('tags', 'name')
       .sort({ createdAt: -1 })
       .lean();
   },
 
-  // Get single post by ID
+  // Get single post by ID with populated tags
   async getPostById(id) {
     await connectDB();
     return await Post.findById(id)
       .populate('author', 'name')
+      .populate('tags', 'name')
       .lean();
   },
 
-  // Get posts by user ID
+  // Get posts by user ID with populated tags
   async getPostsByUser(userId) {
     await connectDB();
     return await Post.find({ author: userId })
       .populate('author', 'name')
+      .populate('tags', 'name')
       .sort({ createdAt: -1 })
       .lean();
   },
@@ -58,8 +75,13 @@ export const postService = {
       const updatedPost = await Post.findByIdAndUpdate(
         id,
         updateData,
-        { new: true }
-      ).populate('author', 'name');
+        { 
+          new: true,
+          runValidators: true 
+        }
+      )
+      .populate('author', 'name')
+      .populate('tags', 'name');
 
       if (!updatedPost) {
         throw new Error('Failed to update post');
