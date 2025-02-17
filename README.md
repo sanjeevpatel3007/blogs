@@ -33,20 +33,10 @@ A feature-rich blog platform built with Next.js, offering a modern UI and powerf
 ## 📸 Screenshots
 
 ### Home Page
-![Home Page](.github/screenshots/home.png)
+![image](https://github.com/user-attachments/assets/a86d285d-a47c-487e-a1b0-48452e38f1a2)
+
 *Hero section with featured and recent posts*
 
-### Blog List
-![Blog List](.github/screenshots/blog-list.png)
-*List of all blog posts with tag filtering*
-
-### Dashboard
-![Dashboard](.github/screenshots/dashboard.png)
-*User dashboard for managing posts*
-
-### Post Editor
-![Post Editor](.github/screenshots/post-editor.png)
-*Create and edit posts with AI assistance*
 
 ## 🚀 Tech Stack
 
