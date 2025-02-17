@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+// Import User and Tag models first
+require('./User');
+require('./Tag');
+
 const postSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -44,9 +48,6 @@ postSchema.pre('save', function(next) {
   }
   next();
 });
-
-// Make sure Tag model is imported and registered before Post model
-require('./Tag');
 
 const Post = mongoose.models.Post || mongoose.model('Post', postSchema);
 export default Post; 

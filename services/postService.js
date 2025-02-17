@@ -1,13 +1,25 @@
 import { connectDB } from '@/lib/db';
 import Post from '@/models/Post';
+import User from '@/models/User';
 import Tag from '@/models/Tag';
 import { uploadImage } from '@/lib/cloudinary';
+
+// Ensure models are registered
+require('@/models/User');
+require('@/models/Tag');
+require('@/models/Post');
 
 export const postService = {
   // Create a new post
   async createPost(postData, userId) {
     await connectDB();
     try {
+      // Verify user exists
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
       const { tags, ...otherData } = postData;
       
       // Create the post with tags
@@ -18,9 +30,15 @@ export const postService = {
       });
 
       // Populate author and tags
-      return await Post.findById(post._id)
+      const populatedPost = await Post.findById(post._id)
         .populate('author', 'name')
         .populate('tags', 'name');
+
+      if (!populatedPost) {
+        throw new Error('Failed to create post');
+      }
+
+      return populatedPost;
     } catch (error) {
       console.error('Create post error:', error);
       throw new Error(error.message || 'Failed to create post');
@@ -30,13 +48,20 @@ export const postService = {
   // Get all posts with populated tags
   async getAllPosts(limit = 10, skip = 0) {
     await connectDB();
-    return await Post.find()
-      .populate('author', 'name')
-      .populate('tags', 'name')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    try {
+      const posts = await Post.find()
+        .populate('author', 'name')
+        .populate('tags', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      return posts;
+    } catch (error) {
+      console.error('Get posts error:', error);
+      throw new Error('Failed to fetch posts');
+    }
   },
 
   // Get single post by ID with populated tags

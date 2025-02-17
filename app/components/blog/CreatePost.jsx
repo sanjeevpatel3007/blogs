@@ -75,6 +75,13 @@ export default function CreatePost() {
     e.preventDefault();
     setLoading(true);
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login to create a post');
+      router.push('/login');
+      return;
+    }
+
     try {
       const data = new FormData();
       
@@ -99,22 +106,25 @@ export default function CreatePost() {
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: data,
       });
 
-      const responseData = await res.json();
-
       if (!res.ok) {
-        throw new Error(responseData.error || 'Failed to create post');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to create post');
       }
 
+      const responseData = await res.json();
       toast.success('Post created successfully!');
       router.push('/blog');
     } catch (error) {
       console.error('Create post error:', error);
       toast.error(error.message || 'Failed to create post');
+      if (error.message.includes('unauthorized')) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }

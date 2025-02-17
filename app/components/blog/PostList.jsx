@@ -16,6 +16,7 @@ export default function PostList({ selectedTag, onTagSelect }) {
 
   const fetchPosts = async () => {
     try {
+      setLoading(true);
       const res = await fetch('/api/posts', {
         method: 'GET',
         cache: 'no-store',
