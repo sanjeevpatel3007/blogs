@@ -6,6 +6,8 @@ import toast from 'react-hot-toast';
 export default function CreatePost() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [generatingSection, setGeneratingSection] = useState('');
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState('');
   const [formData, setFormData] = useState({
@@ -118,24 +120,73 @@ export default function CreatePost() {
     }
   };
 
+  const generateSection = async (section) => {
+    if (!formData.title.trim()) {
+      toast.error('Please enter a title first');
+      return;
+    }
+
+    setGeneratingSection(section);
+    try {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          title: formData.title,
+          section: section 
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to generate content');
+      }
+
+      const data = await res.json();
+      
+      setFormData(prev => ({
+        ...prev,
+        [section]: data.content
+      }));
+
+      toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} generated successfully!`);
+    } catch (error) {
+      console.error('Generation error:', error);
+      toast.error('Failed to generate content');
+    } finally {
+      setGeneratingSection('');
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">Create New Blog Post</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Title</label>
-          <input
-            type="text"
-            name="title"
-            required
-            value={formData.title}
-            onChange={handleChange}
+            <input
+              type="text"
+              name="title"
+              required
+              value={formData.title}
+              onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
+            />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Introduction</label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700">Introduction</label>
+            <button
+              type="button"
+              onClick={() => generateSection('intro')}
+              disabled={!formData.title || generatingSection}
+              className="text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+            >
+              {generatingSection === 'intro' ? 'Generating...' : 'Generate with AI'}
+            </button>
+          </div>
           <textarea
             name="intro"
             required
@@ -147,7 +198,17 @@ export default function CreatePost() {
         </div>
 
         <div>
+          <div className="flex justify-between items-center mb-1">
           <label className="block text-sm font-medium text-gray-700">Description</label>
+            <button
+              type="button"
+              onClick={() => generateSection('description')}
+              disabled={!formData.title || generatingSection}
+              className="text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+            >
+              {generatingSection === 'description' ? 'Generating...' : 'Generate with AI'}
+            </button>
+          </div>
           <textarea
             name="description"
             required
@@ -159,7 +220,17 @@ export default function CreatePost() {
         </div>
 
         <div>
+          <div className="flex justify-between items-center mb-1">
           <label className="block text-sm font-medium text-gray-700">Conclusion</label>
+            <button
+              type="button"
+              onClick={() => generateSection('conclusion')}
+              disabled={!formData.title || generatingSection}
+              className="text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+            >
+              {generatingSection === 'conclusion' ? 'Generating...' : 'Generate with AI'}
+            </button>
+          </div>
           <textarea
             name="conclusion"
             required

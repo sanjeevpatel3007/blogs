@@ -19,6 +19,8 @@ export default function EditPost({ params }) {
     image: null,
     tags: [],
   });
+  const [generating, setGenerating] = useState(false);
+  const [generatingSection, setGeneratingSection] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -156,6 +158,50 @@ export default function EditPost({ params }) {
     }
   };
 
+  const generateSection = async (section) => {
+    if (!formData.title.trim()) {
+      toast.error('Please enter a title first');
+      return;
+    }
+
+    if (formData[section].trim() && 
+        !confirm('This will replace the existing content. Continue?')) {
+      return;
+    }
+
+    setGeneratingSection(section);
+    try {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          title: formData.title,
+          section: section 
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to generate content');
+      }
+
+      const data = await res.json();
+      
+      setFormData(prev => ({
+        ...prev,
+        [section]: data.content
+      }));
+
+      toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} generated successfully!`);
+    } catch (error) {
+      console.error('Generation error:', error);
+      toast.error('Failed to generate content');
+    } finally {
+      setGeneratingSection('');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -181,7 +227,17 @@ export default function EditPost({ params }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Introduction</label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700">Introduction</label>
+            <button
+              type="button"
+              onClick={() => generateSection('intro')}
+              disabled={!formData.title || generatingSection}
+              className="text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+            >
+              {generatingSection === 'intro' ? 'Generating...' : 'Generate with AI'}
+            </button>
+          </div>
           <textarea
             name="intro"
             required
@@ -193,7 +249,17 @@ export default function EditPost({ params }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <button
+              type="button"
+              onClick={() => generateSection('description')}
+              disabled={!formData.title || generatingSection}
+              className="text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+            >
+              {generatingSection === 'description' ? 'Generating...' : 'Generate with AI'}
+            </button>
+          </div>
           <textarea
             name="description"
             required
@@ -205,7 +271,17 @@ export default function EditPost({ params }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Conclusion</label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700">Conclusion</label>
+            <button
+              type="button"
+              onClick={() => generateSection('conclusion')}
+              disabled={!formData.title || generatingSection}
+              className="text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50"
+            >
+              {generatingSection === 'conclusion' ? 'Generating...' : 'Generate with AI'}
+            </button>
+          </div>
           <textarea
             name="conclusion"
             required
