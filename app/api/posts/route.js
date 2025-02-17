@@ -1,12 +1,25 @@
-import { connectDB } from '@/lib/db';
+import { postService } from '@/services/postService';
 import { auth } from '@/middleware/auth';
-import Post from '@/models/Post';
 import { uploadImage } from '@/lib/cloudinary';
 import { NextResponse } from 'next/server';
 
+// GET all posts
+export async function GET() {
+  try {
+    const posts = await postService.getAllPosts();
+    return NextResponse.json(posts);
+  } catch (error) {
+    console.error('Get posts error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch posts' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST new post (protected)
 export const POST = auth(async (req) => {
   try {
-    await connectDB();
     const formData = await req.formData();
     
     const title = formData.get('title');
@@ -22,26 +35,11 @@ export const POST = auth(async (req) => {
       );
     }
 
-    // Validate image file
-    if (!image.type.startsWith('image/')) {
-      return NextResponse.json(
-        { error: 'Please upload a valid image file' },
-        { status: 400 }
-      );
-    }
-
-    // Upload image to Cloudinary
     const imageUrl = await uploadImage(image);
-
-    // Create new post
-    const post = await Post.create({
-      title,
-      intro,
-      description,
-      conclusion,
-      imageUrl,
-      author: req.userId,
-    });
+    const post = await postService.createPost(
+      { title, intro, description, conclusion, imageUrl },
+      req.userId
+    );
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
@@ -51,21 +49,4 @@ export const POST = auth(async (req) => {
       { status: 500 }
     );
   }
-});
-
-export const GET = async () => {
-  try {
-    await connectDB();
-    const posts = await Post.find()
-      .populate('author', 'name')
-      .sort({ createdAt: -1 });
-
-    return NextResponse.json(posts);
-  } catch (error) {
-    console.error('Get posts error:', error);
-    return NextResponse.json(
-      { error: 'Error fetching posts' },
-      { status: 500 }
-    );
-  }
-}; 
+}); 
