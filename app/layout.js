@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Blog App",
-  description: "A modern blog application built with Next.js",
+  title: "Blogss - Share Your Stories",
+  description: "A modern blogging platform for sharing your stories and insights",
 };
 
 export default function RootLayout({ children }) {
@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
       >
         <Toaster position="top-right" />
         <Navbar />
-        <main className="flex-grow">
+        <main className="pt-16 md:pt-20">
           {children}
         </main>
         <Footer />
