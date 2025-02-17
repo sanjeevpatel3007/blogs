@@ -3,9 +3,10 @@ import { auth } from '@/middleware/auth';
 import { NextResponse } from 'next/server';
 
 // GET single post
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   try {
-    const post = await postService.getPostById(params.id);
+    const id = context.params.id;
+    const post = await postService.getPostById(id);
     
     if (!post) {
       return NextResponse.json(
@@ -25,10 +26,41 @@ export async function GET(req, { params }) {
 }
 
 // PUT update post (protected)
-export const PUT = auth(async (req, { params }) => {
+export const PUT = auth(async (request, context) => {
   try {
-    const formData = await req.formData();
-    const post = await postService.updatePost(params.id, Object.fromEntries(formData));
+    const id = context.params.id;
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Post ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const formData = await request.formData();
+    
+    // Extract data from formData
+    const updateData = {
+      title: formData.get('title'),
+      intro: formData.get('intro'),
+      description: formData.get('description'),
+      conclusion: formData.get('conclusion'),
+    };
+
+    // Check if image is included
+    const image = formData.get('image');
+    
+    // Validate required fields
+    for (const [key, value] of Object.entries(updateData)) {
+      if (!value) {
+        return NextResponse.json(
+          { error: `${key} is required` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const post = await postService.updatePost(id, updateData, image);
     
     if (!post) {
       return NextResponse.json(
@@ -37,20 +69,33 @@ export const PUT = auth(async (req, { params }) => {
       );
     }
 
-    return NextResponse.json(post);
+    return NextResponse.json({ 
+      success: true,
+      message: 'Post updated successfully',
+      post 
+    });
   } catch (error) {
     console.error('Update post error:', error);
     return NextResponse.json(
-      { error: 'Failed to update post' },
+      { error: error.message || 'Failed to update post' },
       { status: 500 }
     );
   }
 });
 
 // DELETE post (protected)
-export const DELETE = auth(async (req, { params }) => {
+export const DELETE = auth(async (request, context) => {
   try {
-    const post = await postService.deletePost(params.id);
+    const id = context.params.id;
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Post ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const post = await postService.deletePost(id);
     
     if (!post) {
       return NextResponse.json(
@@ -59,11 +104,15 @@ export const DELETE = auth(async (req, { params }) => {
       );
     }
 
-    return NextResponse.json({ message: 'Post deleted successfully' });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Post deleted successfully',
+      post 
+    });
   } catch (error) {
     console.error('Delete post error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete post' },
+      { error: error.message || 'Failed to delete post' },
       { status: 500 }
     );
   }

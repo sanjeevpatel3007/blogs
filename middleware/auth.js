@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
 export function auth(handler) {
-  return async (req) => {
+  return async (request, context) => {
     try {
-      const token = req.headers.get('authorization')?.split(' ')[1];
+      const token = request.headers.get('authorization')?.split(' ')[1];
       
       if (!token) {
         return NextResponse.json(
@@ -14,9 +14,9 @@ export function auth(handler) {
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.userId = decoded.userId;
+      request.userId = decoded.userId;
       
-      return handler(req);
+      return handler(request, context);
     } catch (error) {
       return NextResponse.json(
         { error: 'Invalid token' },
