@@ -28,12 +28,14 @@ export const postService = {
   },
 
   // Get all posts with populated tags
-  async getAllPosts() {
+  async getAllPosts(limit = 10, skip = 0) {
     await connectDB();
     return await Post.find()
       .populate('author', 'name')
       .populate('tags', 'name')
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
   },
 

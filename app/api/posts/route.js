@@ -4,9 +4,13 @@ import { uploadImage } from '@/lib/cloudinary';
 import { NextResponse } from 'next/server';
 
 // GET all posts
-export async function GET() {
+export async function GET(req) {
   try {
-    const posts = await postService.getAllPosts();
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit')) || 10;
+    const skip = parseInt(searchParams.get('skip')) || 0;
+
+    const posts = await postService.getAllPosts(limit, skip);
     return NextResponse.json(posts);
   } catch (error) {
     console.error('Get posts error:', error);
