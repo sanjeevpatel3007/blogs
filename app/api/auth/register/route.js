@@ -25,14 +25,11 @@ export async function POST(req) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create new user
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password: password,
     });
 
     // Remove password from response
