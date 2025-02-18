@@ -44,11 +44,17 @@ export default function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
+      // Trigger storage event for navbar update
+      window.dispatchEvent(new Event('storage'));
+      
       // Show success message
       toast.success('Successfully logged in!');
       
-      // Redirect to home page
-      router.push('/');
+      // Refresh the page to update navbar state
+      router.refresh();
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
     } catch (err) {
       setError(err.message);
       toast.error(err.message);
