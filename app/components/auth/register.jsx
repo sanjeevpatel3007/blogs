@@ -41,11 +41,21 @@ export default function Register() {
         throw new Error(data.error || 'Something went wrong');
       }
 
-      // Show success message
-      toast.success('Account created successfully! Please log in.');
+      // Store token and user data for automatic login
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Registration successful, redirect to login
-      router.push('/login');
+      // Trigger storage event for navbar update
+      window.dispatchEvent(new Event('storage'));
+
+      // Show success message
+      toast.success('Account created successfully! Redirecting to dashboard...');
+      
+      // Refresh the page to update navbar state
+      router.refresh();
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
     } catch (err) {
       toast.error(err.message);
     } finally {

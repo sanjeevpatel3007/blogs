@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {
@@ -32,6 +33,13 @@ export async function POST(req) {
       password: password,
     });
 
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     // Remove password from response
     const userWithoutPassword = {
       _id: user._id,
@@ -40,7 +48,11 @@ export async function POST(req) {
     };
 
     return NextResponse.json(
-      { message: 'User created successfully', user: userWithoutPassword },
+      { 
+        message: 'User created successfully', 
+        user: userWithoutPassword,
+        token 
+      },
       { status: 201 }
     );
   } catch (error) {
