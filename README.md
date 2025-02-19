@@ -90,9 +90,14 @@ A feature-rich blog platform built with Next.js, offering a modern UI and powerf
 
 ## 🛠️ Development
 
-- **Running Tests**
+- **install dependencies **
   ```bash
-  npm run test
+  npm install
+  ```
+
+- **Local server run**
+  ```bash
+  npm run dev
   ```
 
 - **Building for Production**
@@ -105,10 +110,7 @@ A feature-rich blog platform built with Next.js, offering a modern UI and powerf
   npm start
   ```
 
-- **Linting**
-  ```bash
-  npm run lint
-  ```
+
 
 ## 📝 Project Structure
 
@@ -139,9 +141,7 @@ blogss/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
 
-- Your Name - Initial work - [YourGitHub](https://github.com/yourusername)
 
 ## 🙏 Acknowledgments
 
